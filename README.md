@@ -1,3 +1,9 @@
+⚠️ **DISCLAIMER** ⚠️ 
+
+_This documentation is temporary and largely experimental, so there may be errors._
+
+-----------------------
+
 # tambora documentation
 
 Documentation for [tambora](https://pypi.org/project/tambora/) — a publicly maintained, modular N-body Python package designed for small galactic dynamics tasks with user-friendliness and extensibility in mind.
