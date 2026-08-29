@@ -87,6 +87,70 @@ How to cite tambora, the BSD licence, and the work it builds on.
 
 ::::
 
+## Gallery
+
+Every one of these is a notebook in [Examples](examples/index.md) that runs on a
+laptop, and every frame came out of tambora.
+
+::::{grid} 1 2 2 2
+:gutter: 3
+
+:::{grid-item-card} Ring galaxy
+:link: examples/08-ring-galaxy
+:link-type: doc
+
+```{raw} html
+<video autoplay loop muted playsinline preload="metadata" style="width:100%;border-radius:4px">
+  <source src="_static/gallery/ring_galaxy.mp4" type="video/mp4">
+</video>
+```
++++
+A companion punched straight through a disk. The ring is a kinematic caustic,
+not swept-up matter.
+:::
+
+:::{grid-item-card} Disk–disk merger
+:link: examples/11-disk-merger
+:link-type: doc
+
+```{raw} html
+<video autoplay loop muted playsinline preload="metadata" style="width:100%;border-radius:4px">
+  <source src="_static/gallery/disk_merger.mp4" type="video/mp4">
+</video>
+```
++++
+A tidal bridge spanning the gap, then two tails past 80 kpc, then coalescence.
+:::
+
+:::{grid-item-card} Spiral arms from a flyby
+:link: examples/10-spiral-arms
+:link-type: doc
+
+```{raw} html
+<video autoplay loop muted playsinline preload="metadata" style="width:100%;border-radius:4px">
+  <source src="_static/gallery/spiral_arms.mp4" type="video/mp4">
+</video>
+```
++++
+Prograde on the left, retrograde on the right. Same satellite; only the disk's
+spin is flipped.
+:::
+
+:::{grid-item-card} Disk instability
+:link: examples/09-disk-instability
+:link-type: doc
+
+```{raw} html
+<video autoplay loop muted playsinline preload="metadata" style="width:100%;border-radius:4px">
+  <source src="_static/gallery/disk_instability.mp4" type="video/mp4">
+</video>
+```
++++
+A bare disk goes bar-unstable; the same disk inside a halo does not.
+:::
+
+::::
+
 ## What it looks like
 
 ```python

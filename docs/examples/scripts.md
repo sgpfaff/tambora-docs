@@ -74,9 +74,16 @@ Each run writes:
 - `<out>/<case>_maps.npz` — the face-on and edge-on maps, the times, and a JSON
   metadata blob recording every parameter, the wall time and the energy drift.
 - `<out>/<case>_density.png` — a six-panel log-scaled density figure.
+- `<out>/<case>_density.mp4` — the same maps as a movie, face-on beside
+  edge-on. Falls back to a GIF if ffmpeg is not on the path. Skip it with
+  `--no-movie`, which is much faster when you only want to check a run.
+
+Everything is drawn on black, because `magma` runs to black at the low end and
+empty sky should be the same colour as the page.
 
 Rendering is deliberately separate from running, so a twelve-hour job is never
-lost to a typo in a plotting call:
+lost to a typo in a plotting call — and re-rendering costs seconds, so it is
+also how you iterate on the look:
 
 ```bash
 python hires_galaxies.py --render-only runs/merger_400k/merger_maps.npz

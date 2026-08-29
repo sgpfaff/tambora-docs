@@ -543,7 +543,7 @@ def update(k):
 
 
 anim = FuncAnimation(fig, update, frames=range(len(idx_anim)), blit=False)
-anim.save("ring_galaxy.gif", writer=PillowWriter(fps=12), dpi=80)
+anim.save("ring_galaxy.gif", writer=PillowWriter(fps=6), dpi=80)
 plt.close(fig)
 
 # Redrawing a 30 000-point scatter every frame defeats GIF inter-frame
@@ -553,8 +553,11 @@ from PIL import Image as PILImage, ImageSequence  # noqa: E402
 _src = PILImage.open("ring_galaxy.gif")
 _fr = [f.copy().convert("RGB").quantize(colors=96, method=PILImage.MEDIANCUT)
        for f in ImageSequence.Iterator(_src)]
+# duration is the per-frame delay in ms, and it -- not the writer's fps -- is
+# what a viewer actually sees. The ring forms and expands quickly, so give it
+# room to be watched: 165 ms puts the 70 frames at about 12 seconds.
 _fr[0].save("ring_galaxy.gif", save_all=True, append_images=_fr[1:],
-            duration=90, loop=0, optimize=True)
+            duration=165, loop=0, optimize=True)
 print(f"{len(_fr)} frames, "
       f"{__import__('os').path.getsize('ring_galaxy.gif') / 1e6:.1f} MB")
 
