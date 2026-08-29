@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="200" height="120"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="24 -4 144 139" width="144" height="139"
      role="img" aria-labelledby="drumTitle drumDesc">
   <title id="drumTitle">A Dominican tambora</title>
   <desc id="drumDesc">A two-headed cylindrical merengue hand drum, played horizontally,
@@ -28,6 +28,8 @@
       <stop offset="100%" stop-color="#a9773f"/>
     </linearGradient>
   </defs>
+
+  <g transform="rotate(-28 96 65)">
 
   <!-- far head peeking out behind -->
   <ellipse cx="56" cy="56" rx="13" ry="38" fill="#7a4520"/>
@@ -68,5 +70,6 @@
   <g transform="rotate(-8 84 106)">
     <rect x="44" y="103" width="80" height="6" rx="3" fill="url(#stick)"/>
     <rect x="44" y="103" width="80" height="2" rx="1" fill="#f0cfa0" opacity="0.55"/>
+  </g>
   </g>
 </svg>
