@@ -13,13 +13,6 @@ potentials, and is built so that **asking a question of the result is as easy as
 asking it in words**. You do not index into arrays of snapshots; you write
 `sim.cluster.r(t=2.0)` and get spherical radii in kpc at 2 Gyr.
 
-Self-gravity is [falcON](https://td.mpia.de/~dehnen/falcON/), Walter Dehnen's
-$O(N)$ fast-multipole tree, reached through the interface
-[pyfalcon](https://github.com/GalacticDynamics-Oxford/pyfalcon) established;
-galactic potentials and distribution functions come from
-[galpy](https://docs.galpy.org/). If you publish with tambora, please
-[cite them too](about.md#what-to-cite).
-
 ```{image} _static/stream_progenitor.gif
 :alt: A globular cluster shedding tidal tails over 3 Gyr, with its mass-loss curve
 :width: 100%
@@ -136,8 +129,10 @@ unambiguous in a way that `positions[200, 5000:8000, :]` never is.
 km/s and M☉ back. The internal kpc/Gyr representation never leaks into your
 analysis unless you ask for it. See [Units](guide/units.md).
 
-**falcON self-gravity.** The fast-multipole tree gives $O(N)$ scaling, so
-50 000 particles is routine rather than an overnight job.
+**Fast self-gravity.** Solvers are pluggable and selected by name. The default
+is a fast-multipole tree with $O(N)$ scaling, so 50 000 particles is routine
+rather than an overnight job; exact direct summation is there to check it
+against.
 
 **galpy is a first-class citizen.** Any supported galpy potential becomes an
 external force with one call, and galpy's distribution functions become your
