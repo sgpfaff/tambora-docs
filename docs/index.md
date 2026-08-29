@@ -4,7 +4,7 @@ myst:
     description: "tambora — a modular N-body Python package for small galactic dynamics tasks. Documentation, tutorials and API reference."
 ---
 
-# <img src="_static/tambora-drum.svg" class="brand-drum" alt="A Dominican tambora, the drum the package is named after"> tambora
+# tambora <img src="_static/tambora-drum.svg" class="brand-drum" alt="A Dominican tambora, the drum the package is named after">
 
 *Keeping your N-body simulations in the pocket.*
 

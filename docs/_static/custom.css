@@ -16,14 +16,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.55rem;
   margin-bottom: 0.15rem;
+  padding: 0.35rem 0;   /* room for the tilted drum */
 }
 
 .tambora-brand-drum {
   width: 62px;
   height: auto;
   flex: none;
+  transform: rotate(-28deg);
+  transform-origin: 50% 50%;
 }
 
 .tambora-brand-word {
@@ -47,10 +50,12 @@
 /* ---- landing-page title lockup ---- */
 
 h1 .brand-drum {
-  width: 92px;
+  width: 96px;
   height: auto;
-  vertical-align: -0.34em;
-  margin-right: 0.4rem;
+  vertical-align: -0.36em;
+  margin-left: 0.55rem;
+  transform: rotate(-28deg);
+  transform-origin: 50% 50%;
 }
 
 /* Only the landing page uses the wordmark face for its title; every other
@@ -59,9 +64,23 @@ h1:has(.brand-drum) {
   font-family: var(--tambora-wordmark);
   font-weight: 700;
   letter-spacing: -0.01em;
+  text-align: center;
+  margin-bottom: 0.35rem;
+}
+
+/* The slogan sits under the lockup, centred with it. */
+h1:has(.brand-drum) + p {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 2rem;
 }
 
 /* Merienda has tall ascenders; give the tagline a little air. */
 h1:has(.brand-drum) + p em {
   font-size: 1.05em;
+}
+
+/* Keep the anchor link from nudging the centred title off-centre. */
+h1:has(.brand-drum) .headerlink {
+  position: absolute;
 }
