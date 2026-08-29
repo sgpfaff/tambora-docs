@@ -13,13 +13,7 @@ myst:
 :class: no-scaled-link
 ```
 
-A publicly maintained, modular N-body Python package for small galactic dynamics
-tasks, built for user-friendliness and extensibility.
-
-tambora runs self-gravitating N-body simulations with external galactic
-potentials, and is built so that **asking a question of the result is as easy as
-asking it in words**. You do not index into arrays of snapshots; you write
-`sim.cluster.r(t=2.0)` and get spherical radii in kpc at 2 Gyr.
+*For keeping your N-body simulations running, like a drummer in a band.*
 
 ```{image} _static/stream_progenitor.gif
 :alt: A globular cluster shedding tidal tails over 3 Gyr, with its mass-loss curve

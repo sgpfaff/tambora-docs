@@ -1,5 +1,12 @@
 # User guide
 
+tambora is a publicly maintained, modular N-body Python package for small
+galactic dynamics tasks, built for user-friendliness and extensibility. It runs
+self-gravitating simulations with external galactic potentials, and is built so
+that **asking a question of the result is as easy as asking it in words**. You
+do not index into arrays of snapshots; you write `sim.cluster.r(t=2.0)` and get
+spherical radii in kpc at 2 Gyr.
+
 The [quickstart](../quickstart.md) shows you the shape of a tambora session.
 This guide explains why it has that shape, so that when you hit something the
 quickstart did not cover, you can guess right.
