@@ -1,17 +1,24 @@
 ---
 myst:
   html_meta:
-    description: "tambora — an N-body code for the modern era. Documentation, tutorials and API reference."
+    description: "tambora — a modular N-body Python package for small galactic dynamics tasks. Documentation, tutorials and API reference."
 ---
 
 # tambora
 
-*An N-body code for the modern era.*
+*A publicly maintained, modular N-body Python package designed for small galactic dynamics tasks with user-friendliness and extensibility in mind.*
 
 tambora runs self-gravitating N-body simulations with external galactic
 potentials, and is built so that **asking a question of the result is as easy as
 asking it in words**. You do not index into arrays of snapshots; you write
 `sim.cluster.r(t=2.0)` and get spherical radii in kpc at 2 Gyr.
+
+Self-gravity is [falcON](https://td.mpia.de/~dehnen/falcON/), Walter Dehnen's
+$O(N)$ fast-multipole tree, reached through the interface
+[pyfalcon](https://github.com/GalacticDynamics-Oxford/pyfalcon) established;
+galactic potentials and distribution functions come from
+[galpy](https://docs.galpy.org/). If you publish with tambora, please
+[cite them too](about.md#what-to-cite).
 
 ```{image} _static/stream_progenitor.gif
 :alt: A globular cluster shedding tidal tails over 3 Gyr, with its mass-loss curve

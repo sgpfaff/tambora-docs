@@ -1,9 +1,11 @@
 # tambora documentation
 
-Documentation for [tambora](https://pypi.org/project/tambora/), an N-body code
-for the modern era.
+Documentation for [tambora](https://pypi.org/project/tambora/) — a publicly maintained, modular N-body Python package designed for small galactic dynamics tasks with user-friendliness and extensibility in mind.
 
 **Live site:** https://sgpfaff.github.io/tambora-docs/
+
+tambora is GPL-2.0-or-later (it bundles falcON); see the
+[licence and citing page](https://sgpfaff.github.io/tambora-docs/about.html).
 
 Built with [Sphinx](https://www.sphinx-doc.org/) + [Furo](https://pradyunsg.me/furo/),
 against the released `tambora==0.1.0a1`. The API reference is generated from the

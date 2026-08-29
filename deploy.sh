@@ -7,7 +7,7 @@ USER="${1:-sgpfaff}"
 REPO="${2:-tambora-docs}"
 
 gh repo create "$USER/$REPO" --public --source=. --remote=origin \
-  --description "Documentation for tambora, an N-body code for the modern era"
+  --description "Documentation for tambora, a modular N-body Python package for small galactic dynamics tasks"
 
 git branch -M main
 git push -u origin main
