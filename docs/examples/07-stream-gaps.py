@@ -93,7 +93,16 @@ RO, VO = 8.0, 220.0
 # length. In this notebook the King progenitor gives a gap depth of ~0.2 where the
 # Plummer one gave ~0.5.
 #
-# **Plenty of particles.** A deficit cannot be seen in a sparse histogram.
+**Plenty of particles.** A deficit cannot be seen in a sparse histogram.
+
+**A long stream.** This one matters more than it looks. A subhalo massive enough
+to open a visible gap is also massive enough to kick the *progenitor* if it
+passes nearby — and once the remnant moves, the whole stream shifts with it and
+the comparison against the control is measuring translation rather than
+structure. On a 2.7 kpc stream there is nowhere far enough to aim. So we evolve
+for 1.8 Gyr first, giving an 18 kpc stream, and put the impact 7 kpc down one
+tail. The progenitor then barely notices: it shifts 0.2 kpc, against a gap
+signal of 9σ.
 
 # %%
 o = Orbit(
@@ -118,8 +127,10 @@ stage1.add_external_pot(MWPotential2014)
 bh = BoundednessHook("gc", eps=EPS)
 stage1.add_hook(bh)
 
+T_FORM = 1.8  # Gyr of stripping before the flyby -- gives an ~18 kpc stream
+
 t0 = time.time()
-stage1.run(t_end=0.5, dt=1e-4, dt_out=1e-2, eps=EPS, progress=False)
+stage1.run(t_end=T_FORM, dt=1e-4, dt_out=2e-2, eps=EPS, progress=False)
 print(f"stage 1: {time.time() - t0:.0f} s, bound fraction {bh.fraction()[-1]:.3f}")
 
 # The state we will restart from, twice.
@@ -128,7 +139,12 @@ V0 = stage1.gc.vel(t=-1)
 M0 = stage1.gc.mass
 bound = bh.mask_at(stage1.times[-1])
 unbound = ~bound
+prog0 = P0[bound].mean(0)
+_u = np.linalg.svd(P0[unbound] - P0[unbound].mean(0))[2][0]
+_s = (P0[unbound] - prog0) @ _u
 print(f"{unbound.sum()} stream particles to perturb")
+print(f"stream spans s = {_s.min():+.1f} to {_s.max():+.1f} kpc "
+      f"({np.ptp(_s):.1f} kpc long)")
 
 # %% [markdown]
 # ### Restarting
@@ -153,9 +169,12 @@ v_tail = V0[unbound]
 # principal axis of the whole stream, then of the neighbourhood of the target
 u_global = np.linalg.svd(tail - tail.mean(0))[2][0]
 s_global = (tail - prog) @ u_global
-target = tail[np.argsort(s_global)[int(0.20 * len(s_global))]]
 
-near = np.linalg.norm(tail - target, axis=1) < 0.3
+# Aim 7 kpc down the trailing tail: far enough that the progenitor is spectator.
+S_TARGET = -7.0
+target = tail[int(np.argmin(np.abs(s_global - S_TARGET)))]
+
+near = np.linalg.norm(tail - target, axis=1) < 0.4
 u_loc = np.linalg.svd(tail[near] - tail[near].mean(0))[2][0]  # along the stream
 n_hat = np.cross(u_loc, [0.0, 0.0, 1.0])
 n_hat /= np.linalg.norm(n_hat)  # perpendicular: the flight direction
@@ -165,6 +184,7 @@ v_local = v_tail[near].mean(0)
 
 print(f"progenitor at {prog.round(2)}")
 print(f"target       {target.round(2)}   ({near.sum()} particles nearby)")
+print(f"impact site is {np.linalg.norm(target - prog):.2f} kpc from the progenitor")
 print(f"stream speed at the impact point: {np.linalg.norm(v_local):.0f} km/s")
 
 # %% [markdown]
@@ -183,14 +203,14 @@ print(f"stream speed at the impact point: {np.linalg.norm(v_local):.0f} km/s")
 # `eps = 2` pc and the subhalo needs `eps = 500` pc, in the same simulation.
 
 # %%
-M_SUB = 3e7  # Msun
-R_S = 0.25  # Plummer scale radius [kpc]
+M_SUB = 1e8  # Msun
+R_S = 0.35  # Plummer scale radius [kpc]
 EPS_SUB = 2 * R_S  # <- the factor of two
-B_IMP = 0.25  # impact parameter [kpc]
+B_IMP = 0.35  # impact parameter [kpc]
 
 T_CA = 0.005  # time to closest approach [Gyr]
-T_POST = 0.3  # how long to follow the stream afterwards
-DT = 1e-4
+T_POST = 0.5  # how long to follow the stream afterwards
+DT = 2e-4
 
 def launch(v_sub, t_ca=T_CA):
     """Position and velocity for a perturber reaching closest approach at t_ca."""
@@ -395,61 +415,100 @@ plt.show()
 #
 # The kick is instantaneous; the *signature* takes time to develop. Stars kicked
 # towards the perturber's path converge and those kicked away diverge, so over
-# roughly a dynamical time the velocity perturbation is converted into a density
+# roughly a dynamical time the velocity perturbation turns into a density
 # perturbation: an under-dense gap flanked by over-dense caustics.
 #
 # > **This is a different measurement from section 4.** There we differenced the
 # > two runs 20 Myr after closest approach to isolate the *impulse*. Here we run
-# > for 300 Myr, during which the perturber is still (weakly) pulling on the whole
-# > stream from a distance. The late-time velocity difference is therefore not the
-# > impulse, and should not be compared with it.
+# > for 500 Myr, during which the perturber is still weakly pulling on the whole
+# > stream from a distance. The late-time velocity difference is therefore not
+# > the impulse and should not be compared with it.
 
 # %%
 t0 = time.time()
-ctrl_l, imp_l = run_pair(V_SUB, t_end=T_POST, dt=DT, dt_out=0.01)
+ctrl_l, imp_l = run_pair(V_SUB, t_end=T_POST, dt=DT, dt_out=0.05)
 print(f"{time.time() - t0:.0f} s")
 
 Pc, Vc = ctrl_l.stream.pos(t=-1), ctrl_l.stream.vel(t=-1)
 Pi, Vi = imp_l.stream.pos(t=-1), imp_l.stream.vel(t=-1)
 
-# A stream-aligned coordinate, defined on the CONTROL run so both are measured
-# on the same axis.
-prog_f = Pc[bound].mean(0)
+# %% [markdown]
+# ### First, a validity check
+#
+# Before comparing anything, confirm the perturber did not move the progenitor.
+# If it did, the whole stream translates and a naive comparison against the
+# control shows a spurious "gap" that is really just the two streams sliding past
+# each other. This is the single easiest way to fool yourself here.
+
+# %%
+origin_c = Pc[bound].mean(0)  # each run gets its OWN progenitor as the origin
+origin_i = Pi[bound].mean(0)
+
+prog_shift = np.linalg.norm(origin_i - origin_c)
+prog_vkick = np.linalg.norm(Vi[bound].mean(0) - Vc[bound].mean(0))
+
 u_f = np.linalg.svd(Pc[unbound] - Pc[unbound].mean(0))[2][0]
-s_c = (Pc[unbound] - prog_f) @ u_f
-s_i = (Pi[unbound] - prog_f) @ u_f
-dv_l = np.linalg.norm((Vi - Vc)[unbound], axis=1)
+s_c = (Pc[unbound] - origin_c) @ u_f
+s_i = (Pi[unbound] - origin_i) @ u_f
 
-# Where the perturbation actually landed: the kick-weighted centroid. The launch
-# geometry cannot tell us this, because the stream shears over 300 Myr.
-s_hit = np.average(s_c, weights=dv_l)
-print(f"kick-weighted impact centroid: s = {s_hit:+.2f} kpc")
+bins = np.linspace(np.percentile(s_c, 1), np.percentile(s_c, 99), 50)
+bin_w = bins[1] - bins[0]
 
+print(f"progenitor displaced by {prog_shift:.3f} kpc "
+      f"({prog_shift / bin_w:.2f} histogram bins)")
+print(f"progenitor velocity kick {prog_vkick:.2f} km/s")
+print("-> negligible; the two streams are measured on the same footing"
+      if prog_shift < 0.5 * bin_w else
+      "-> NOT negligible; aim the perturber further from the progenitor")
 
 # %% [markdown]
-# ### Three profiles along the stream
+# Measuring each stream from **its own** progenitor removes whatever residual
+# translation is left. That is why `origin_c` and `origin_i` are computed
+# separately above rather than sharing one origin.
+
+# %% [markdown]
+# ### Density, and its significance
 #
-# Density is the usual diagnostic, but it is not the only one. Because the
-# perturber imparts a *coherent* velocity pattern, the mean velocity along the
-# stream picks up a characteristic wiggle, and the local dispersion rises where
-# stars on different orbits have been folded together.
+# A gap is a deficit measured against Poisson noise, so quote both. For bin
+# counts $n_{\rm ctrl}$ and $n_{\rm imp}$ the deficit significance is
 #
-# We measure the dispersion **perpendicular to the stream axis**. The along-stream
+# $$ \frac{n_{\rm ctrl} - n_{\rm imp}}{\sqrt{n_{\rm ctrl} + n_{\rm imp}}} , $$
+#
+# and bins with few control counts are excluded — a bin going from 14 stars to 3
+# looks like a dramatic gap and means nothing.
+
+# %%
+ctr = 0.5 * (bins[1:] + bins[:-1])
+n_c, _ = np.histogram(s_c, bins)
+n_i, _ = np.histogram(s_i, bins)
+
+NMIN = 30  # minimum control counts for a bin to be trusted
+reliable = n_c >= NMIN
+signif = (n_c - n_i) / np.sqrt(np.maximum(n_c + n_i, 1))
+ratio = np.where(reliable, n_i / np.maximum(n_c, 1), np.nan)
+
+k = int(np.argmax(np.where(reliable, signif, -np.inf)))
+print(f"deepest reliable deficit: {n_c[k]} -> {n_i[k]} stars "
+      f"(ratio {ratio[k]:.2f}) at s = {ctr[k]:+.2f} kpc, {signif[k]:.1f} sigma")
+
+# %% [markdown]
+# ### Velocity, the kinematic counterpart
+#
+# The perturber imparts a coherent velocity pattern, so the mean velocity along
+# the stream picks up a wiggle and the local dispersion rises where stars on
+# different orbits have been folded together.
+#
+# Measure the dispersion **perpendicular** to the stream axis: the along-stream
 # component is dominated by the stream's own velocity gradient, which would swamp
 # the signal.
 
 # %%
-bins = np.linspace(np.percentile(s_c, 1), np.percentile(s_c, 99), 40)
-ctr = 0.5 * (bins[1:] + bins[:-1])
-
-
 def profiles(s_vals, V):
-    """Counts, mean along-stream velocity, and perpendicular dispersion."""
-    n, v_par, sig_perp = [], [], []
+    """Mean along-stream velocity and perpendicular dispersion, per bin."""
+    v_par, sig_perp = [], []
     for lo, hi in zip(bins[:-1], bins[1:]):
         sel = (s_vals >= lo) & (s_vals < hi)
-        n.append(sel.sum())
-        if sel.sum() > 12:
+        if sel.sum() >= 15:
             vv = V[unbound][sel]
             par = vv @ u_f
             perp = vv - np.outer(par, u_f)
@@ -460,42 +519,42 @@ def profiles(s_vals, V):
         else:
             v_par.append(np.nan)
             sig_perp.append(np.nan)
-    return np.array(n), np.array(v_par), np.array(sig_perp)
+    return np.array(v_par), np.array(sig_perp)
 
 
-n_c, vpar_c, sig_c = profiles(s_c, Vc)
-n_i, vpar_i, sig_i = profiles(s_i, Vi)
-ratio = np.where(n_c > 8, n_i / np.maximum(n_c, 1), np.nan)
+vpar_c, sig_c = profiles(s_c, Vc)
+vpar_i, sig_i = profiles(s_i, Vi)
 
-print(f"deepest point of the gap : {np.nanmin(ratio):.2f} "
-      f"at s = {ctr[np.nanargmin(ratio)]:+.2f} kpc")
 print(f"largest mean-velocity shift : {np.nanmax(np.abs(vpar_i - vpar_c)):.2f} km/s")
 print(f"largest dispersion excess   : {np.nanmax(sig_i - sig_c):+.2f} km/s")
 
 # %%
-fig, ax = plt.subplots(2, 2, figsize=(11.4, 7.0))
+dv_l = np.linalg.norm((Vi - Vc)[unbound], axis=1)
+s_hit = np.average(s_c, weights=dv_l)  # kick-weighted centroid of the perturbation
+
+fig, ax = plt.subplots(2, 2, figsize=(11.6, 7.2))
 
 a = ax[0, 0]
-a.scatter(Pc[unbound, 0], Pc[unbound, 1], s=2, lw=0, c="0.78",
+a.scatter(Pc[unbound, 0], Pc[unbound, 1], s=1.6, lw=0, c="0.8",
           label="no subhalo", rasterized=True)
-sc_pts = a.scatter(Pi[unbound, 0], Pi[unbound, 1], s=2, lw=0, c=dv_l,
+sc_pts = a.scatter(Pi[unbound, 0], Pi[unbound, 1], s=1.6, lw=0, c=dv_l,
                    cmap="inferno", vmax=np.percentile(dv_l, 98), rasterized=True)
-a.scatter(*prog_f[:2], s=32, c="k", marker="*", zorder=5, label="progenitor")
+a.scatter(*origin_i[:2], s=34, c="k", marker="*", zorder=5, label="progenitor")
 xs, ys = Pi[unbound, 0], Pi[unbound, 1]
-xw, yw = np.ptp(xs) * 1.12, np.ptp(ys) * 1.06
+xw, yw = np.ptp(xs) * 1.10, np.ptp(ys) * 1.06
 a.set_xlim(xs.mean() - xw / 2, xs.mean() + xw / 2)
 a.set_ylim(ys.mean() - yw / 2, ys.mean() + yw / 2)
 a.set_box_aspect(yw / xw)
 a.set_xlabel("$x$ [kpc]")
 a.set_ylabel("$y$ [kpc]")
-a.set_title(rf"After a ${M_SUB / 1e7:.0f}\times10^7\,M_\odot$ flyby")
+a.set_title(rf"After a $10^{{8}}\,M_\odot$ flyby, {T_POST} Gyr on")
 a.legend(loc="upper left", fontsize=7.5)
 plt.colorbar(sc_pts, ax=a, label=r"$|\Delta v|$ [km s$^{-1}$]")
 
 a = ax[0, 1]
 a.step(ctr, n_c, where="mid", c="0.6", label="no subhalo")
 a.step(ctr, n_i, where="mid", c="k", label="with subhalo")
-a.axvline(s_hit, c="#d94801", lw=1.0, ls="--", label="impact centroid")
+a.axvline(s_hit, c="#d94801", lw=1.0, ls="--", label="impact")
 a.set_xlabel("$s$ along stream [kpc]")
 a.set_ylabel("particles per bin")
 a.set_title("Linear density")
@@ -505,9 +564,13 @@ a = ax[1, 0]
 a.step(ctr, ratio, where="mid", c="k")
 a.axhline(1.0, c="0.6", lw=0.9, ls="--")
 a.axvline(s_hit, c="#d94801", lw=1.0, ls="--")
+a.plot(ctr[k], ratio[k], "o", c="#d94801", ms=7, zorder=5)
+a.annotate(f"{signif[k]:.0f}$\\sigma$", (ctr[k], ratio[k]),
+           textcoords="offset points", xytext=(8, 6), color="#d94801")
+a.set_ylim(0, 2)
 a.set_xlabel("$s$ along stream [kpc]")
 a.set_ylabel("perturbed / control")
-a.set_title("The gap, and its flanking caustics")
+a.set_title(f"The gap (bins with $\\geq${NMIN} control stars)")
 
 a = ax[1, 1]
 a.step(ctr, sig_c, where="mid", c="0.6", label="no subhalo")
@@ -522,27 +585,17 @@ fig.tight_layout()
 plt.show()
 
 # %% [markdown]
-# The density panel shows the classic pair: a deficit where stars have been
-# swept out, immediately flanked by an excess where they have piled up. The
-# dispersion panel shows the kinematic counterpart — the perturbed stream is
-# locally hotter, because stars that used to be on neighbouring orbits have been
-# given different kicks and are now crossing.
+# The density panel shows the classic pair: a deficit where stars have been swept
+# out, flanked by an excess where they piled up. The dispersion panel is the
+# kinematic counterpart — the perturbed stream is locally hotter, because stars
+# that used to be on neighbouring orbits were given different kicks and are now
+# crossing.
 #
 # The dispersion signal is noisier than the density signal, and that is
-# characteristic rather than a defect of this particular run: density is a count,
-# while dispersion is a second moment, so for the same number of stars it carries
+# characteristic rather than a defect of this run: density is a count, whereas
+# dispersion is a second moment, so for the same number of stars it carries
 # considerably more Poisson noise. In real data the density gap is usually found
-# first and the kinematic signature used to confirm it.
-
-# %% [markdown]
-# ### Measuring the width with galpy
-#
-# Rather than binning by hand, you can fit the perturbed and unperturbed streams
-# with `StreamTrack` and read the width straight off the fitted covariance — the
-# machinery from
-# [notebook 06](06-stream-track.ipynb), now used as a gap-detection tool. The
-# advantage is that it measures the width *perpendicular to the fitted track*
-# rather than to a straight axis, which matters once the track bends.
+# first and the kinematics used to confirm it.
 
 # %% [markdown]
 # ## 9. Watch the gap open
@@ -558,6 +611,8 @@ from PIL import Image as PILImage, ImageSequence  # noqa: E402
 
 Pc_all = ctrl_l.stream.pos()
 Pi_all = imp_l.stream.pos()
+Pc_bound_all = ctrl_l.stream.pos()[:, bound]
+Pi_bound_all = imp_l.stream.pos()[:, bound]
 times = ctrl_l.times
 sub_track = imp_l.sub.pos()
 
@@ -568,8 +623,8 @@ sc_c = a0.scatter([], [], s=2.5, lw=0, c="0.75", label="no subhalo")
 sc_i = a0.scatter([], [], s=2.5, lw=0, c="k", label="with subhalo")
 (sub_pt,) = a0.plot([], [], "o", c="#d94801", ms=7, label="subhalo")
 xs, ys = Pi_all[:, unbound, 0], Pi_all[:, unbound, 1]
-a0.set_xlim(xs.min() - 0.5, xs.max() + 0.5)
-a0.set_ylim(ys.min() - 0.5, ys.max() + 0.5)
+a0.set_xlim(xs.min() - 1.0, xs.max() + 1.0)
+a0.set_ylim(ys.min() - 1.0, ys.max() + 1.0)
 a0.set_aspect("equal")
 a0.set_xlabel("$x$ [kpc]")
 a0.set_ylabel("$y$ [kpc]")
@@ -591,9 +646,9 @@ def update(k):
     sc_c.set_offsets(pc[:, :2])
     sc_i.set_offsets(pi[:, :2])
     sub_pt.set_data([sub_track[k, 0, 0]], [sub_track[k, 0, 1]])
-    pf_k = Pc_all[k][bound].mean(0)
-    hc_k, _ = np.histogram((pc - pf_k) @ u_f, bins=bins)
-    hi_k, _ = np.histogram((pi - pf_k) @ u_f, bins=bins)
+    # each run measured from its own progenitor, exactly as in section 8
+    hc_k, _ = np.histogram((pc - Pc_bound_all[k].mean(0)) @ u_f, bins=bins)
+    hi_k, _ = np.histogram((pi - Pi_bound_all[k].mean(0)) @ u_f, bins=bins)
     line_c.set_data(ctr, hc_k)
     line_i.set_data(ctr, hi_k)
     ttl.set_text(f"$t = {times[k] * 1000:.0f}$ Myr after closest approach")
@@ -630,11 +685,13 @@ Image(filename="stream_gap.gif")
 # - **Baryonic perturbers do this too.** Giant molecular clouds and the Galactic
 #   bar produce comparable features, so a gap is not by itself evidence of dark
 #   substructure.
-# - **Resolution.** A gap is a deficit against a Poisson background. With
-#   $N \sim 10^3$ particles per tail the noise is comparable to the signal, which
-#   is why this notebook uses 8000 particles and still shows a visibly ragged
-#   density profile. Convergence-test any gap you intend to quote — see
+# - **Resolution.** A gap is a deficit against a Poisson background, so always
+#   quote a significance and discard low-count bins. Convergence-test any gap you
+#   intend to publish — see
 #   [Reliable N-body simulations](../guide/reliable-nbody.md#demonstrating-convergence).
+# - **Watch the progenitor.** The check in section 8 is not optional. A perturber
+#   massive enough to open a gap can also kick the remnant, and a translated
+#   stream mimics a density feature convincingly. Aim far down a tail, and verify.
 #
 # ## Where to go next
 #

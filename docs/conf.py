@@ -123,9 +123,16 @@ exclude_patterns += ["examples/*.py"]
 # -- HTML output ------------------------------------------------------------
 
 html_theme = "furo"
-html_title = f"tambora {version}"
+# The sidebar brand template draws the wordmark and version; keep the
+# document title clean for the browser tab and the mobile header.
+html_title = "tambora"
 html_static_path = ["_static"]
-html_css_files = ["custom.css"]
+html_css_files = [
+    # Merienda: the wordmark face. Warm Latin-flavoured semi-script.
+    ("https://fonts.googleapis.com/css2?family=Merienda:wght@700&display=swap",
+     {"rel": "stylesheet"}),
+    "custom.css",
+]
 html_copy_source = True
 html_show_sourcelink = True
 
@@ -133,6 +140,7 @@ GITHUB_USER = os.environ.get("TAMBORA_DOCS_GH_USER", "sgpfaff")
 GITHUB_DOCS_REPO = os.environ.get("TAMBORA_DOCS_GH_REPO", "tambora-docs")
 
 html_theme_options = {
+    "sidebar_hide_name": True,   # the brand template draws the wordmark instead
     "source_repository": f"https://github.com/{GITHUB_USER}/{GITHUB_DOCS_REPO}/",
     "source_branch": "main",
     "source_directory": "docs/",

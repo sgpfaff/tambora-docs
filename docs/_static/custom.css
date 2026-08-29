@@ -1,0 +1,67 @@
+/* ------------------------------------------------------------------ *
+ * tambora docs -- brand lockup and wordmark
+ * ------------------------------------------------------------------ */
+
+:root {
+  --tambora-wordmark: "Merienda", "Georgia", serif;
+}
+
+/* ---- sidebar brand ---- */
+
+.sidebar-brand {
+  text-decoration: none;
+}
+
+.tambora-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+
+.tambora-brand-drum {
+  width: 62px;
+  height: auto;
+  flex: none;
+}
+
+.tambora-brand-word {
+  font-family: var(--tambora-wordmark);
+  font-weight: 700;
+  font-size: 1.75rem;
+  line-height: 1.1;
+  letter-spacing: -0.005em;
+  color: var(--color-sidebar-brand-text);
+}
+
+.tambora-brand-version {
+  display: block;
+  text-align: center;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+  color: var(--color-sidebar-brand-text);
+}
+
+/* ---- landing-page title lockup ---- */
+
+h1 .brand-drum {
+  width: 92px;
+  height: auto;
+  vertical-align: -0.34em;
+  margin-right: 0.4rem;
+}
+
+/* Only the landing page uses the wordmark face for its title; every other
+   page keeps the body font so headings stay readable at length. */
+h1:has(.brand-drum) {
+  font-family: var(--tambora-wordmark);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Merienda has tall ascenders; give the tagline a little air. */
+h1:has(.brand-drum) + p em {
+  font-size: 1.05em;
+}

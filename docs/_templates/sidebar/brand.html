@@ -1,0 +1,14 @@
+{#- tambora brand lockup: the drum, the wordmark, and the version. -#}
+<a class="sidebar-brand centered" href="{{ pathto(master_doc) }}">
+  {%- block brand_content %}
+  <div class="tambora-brand">
+    <img class="tambora-brand-drum"
+         src="{{ pathto('_static/tambora-drum.svg', 1) }}"
+         alt="A Dominican tambora"/>
+    <span class="tambora-brand-word">tambora</span>
+  </div>
+  {%- if version %}
+  <span class="tambora-brand-version">{{ version }}</span>
+  {%- endif %}
+  {% endblock brand_content %}
+</a>
