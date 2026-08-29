@@ -292,20 +292,34 @@ sim.run(t_end=T_END, dt=DT, dt_out=DT_OUT, eps=EPS, theta=0.6)
 print(f"\n|dE/E0| = {sim.monitor.drift['energy'][-1]:.2e}")
 
 
-# Track each galaxy by its halo's centre of mass. The haloes carry most of the
-# mass, so they define where the galaxy *is* far more robustly than the disks --
-# which are busy being torn into tails.
+# Track each galaxy by its halo, which carries most of the mass and stays
+# coherent while the disks are being torn into tails.
+#
+# Use the *median* position, not the mass-weighted mean. This matters more than
+# it looks. Once an encounter starts stripping material, a minority of particles
+# ends up spread over tens of kiloparsecs, and a mean is dragged a long way by
+# them: with the mean, this run reports the two centres still 58 kpc apart at
+# the end and looks like a pair that never merged. The median puts them 6 kpc
+# apart -- they have merged, which is also what the density maps plainly show.
+# A mean is the wrong summary statistic for a distribution with a tail.
 def com(comp, t):
     c = getattr(sim, comp)
-    m = c.mass
-    return np.array([np.average(c.x(t=t), weights=m),
-                     np.average(c.y(t=t), weights=m),
-                     np.average(c.z(t=t), weights=m)])
+    return np.array([np.median(c.x(t=t)), np.median(c.y(t=t)), np.median(c.z(t=t))])
 
 
 sep = np.array([np.linalg.norm(com("halo1", i) - com("halo2", i))
                 for i in range(len(sim.times))])
-i_peri = int(np.argmin(sep))
+
+# The *first* pericentre is what makes the bridge and the tails, and it is not
+# the global minimum of this curve: if the pair merges, the deepest approach is
+# the merger at the end. Walk down to the first local minimum instead, on a
+# lightly smoothed curve so sampling noise cannot stop the walk early.
+# Pad with edge values, not zeros: a "same" convolution zero-pads, which puts a
+# fake dip at t=0 that the walk below would read as the first pericentre.
+_sm = np.convolve(np.pad(sep, 2, mode="edge"), np.ones(5) / 5.0, mode="valid")
+i_peri = 1
+while i_peri < len(_sm) - 2 and _sm[i_peri + 1] <= _sm[i_peri]:
+    i_peri += 1
 t_peri = sim.times[i_peri]
 print(f"first pericentre {sep[i_peri]:.1f} kpc at t = {t_peri:.2f} Gyr")
 
@@ -358,10 +372,17 @@ ax.set_title("Centre-to-centre separation")
 fig.tight_layout()
 plt.show()
 
-print(f"first pericentre: {sep.min():.1f} kpc at t = {t_peri:.2f} Gyr")
+print(f"first pericentre: {sep[i_peri]:.1f} kpc at t = {t_peri:.2f} Gyr")
 print(f"  (point-mass prediction was {R_PERI:.1f} kpc)")
+print(f"closest approach overall: {sep.min():.1f} kpc at "
+      f"t = {sim.times[int(np.argmin(sep))]:.2f} Gyr")
 print(f"separation at end: {sep[-1]:.1f} kpc")
-if sep[-1] < sep[i_peri:].max():
+if sep[-1] < 0.15 * sep[0]:
+    print("  -> the two centres have converged: the galaxies have merged.")
+    print("     The orbit decayed because the live haloes absorbed its energy.")
+    print("     A rigid external halo could not have done this -- there would be")
+    print("     no dynamical friction, and the pair would still be flying apart.")
+elif sep[-1] < sep[i_peri:].max():
     print("  -> the pair is falling back together: orbital energy has been lost")
     print("     to the haloes. A rigid halo could not have done this.")
 
