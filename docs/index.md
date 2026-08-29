@@ -13,7 +13,7 @@ myst:
 :class: no-scaled-link
 ```
 
-*For keeping your N-body simulations running, like a drummer in a band.*
+*Keeping your N-body simulations in the pocket.*
 
 ```{image} _static/stream_progenitor.gif
 :alt: A globular cluster shedding tidal tails over 3 Gyr, with its mass-loss curve
