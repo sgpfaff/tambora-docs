@@ -9,8 +9,8 @@ REPO="${2:-tambora-docs}"
 gh repo create "$USER/$REPO" --public --source=. --remote=origin \
   --description "Documentation for tambora, a modular N-body Python package for small galactic dynamics tasks"
 
-git branch -M main
-git push -u origin main
+git branch -M master
+git push -u origin master
 
 # Publish from the Actions workflow rather than a branch.
 gh api -X POST "repos/$USER/$REPO/pages" \

@@ -2,9 +2,9 @@ name: Build and deploy docs
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 # Allow GITHUB_TOKEN to publish to Pages.
@@ -59,8 +59,8 @@ jobs:
           path: docs/_build/html
 
   deploy:
-    # Only publish from main, never from a pull request.
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    # Only publish from master, never from a pull request.
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:
