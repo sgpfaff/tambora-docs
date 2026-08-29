@@ -142,7 +142,7 @@ GITHUB_DOCS_REPO = os.environ.get("TAMBORA_DOCS_GH_REPO", "tambora-docs")
 html_theme_options = {
     "sidebar_hide_name": True,   # the brand template draws the wordmark instead
     "source_repository": f"https://github.com/{GITHUB_USER}/{GITHUB_DOCS_REPO}/",
-    "source_branch": "main",
+    "source_branch": "master",
     "source_directory": "docs/",
     "navigation_with_keys": True,
     "footer_icons": [

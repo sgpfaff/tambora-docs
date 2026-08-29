@@ -71,7 +71,7 @@ def strip_progress_bars(path: Path) -> None:
         print(f"      stripped {saved/1e6:.1f} MB of progress-bar frames")
 
 
-def add_colab_badge(path: Path, user: str, repo: str) -> None:
+def add_colab_badge(path: Path, user: str, repo: str, branch: str) -> None:
     """Ensure the first markdown cell carries an 'Open in Colab' badge."""
     import nbformat
 
@@ -80,7 +80,7 @@ def add_colab_badge(path: Path, user: str, repo: str) -> None:
         return
     src = nb.cells[0].source
     url = (
-        f"https://colab.research.google.com/github/{user}/{repo}/blob/main/"
+        f"https://colab.research.google.com/github/{user}/{repo}/blob/{branch}/"
         f"docs/examples/{path.name}"
     )
     badge = f"[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]({url})"
@@ -95,7 +95,7 @@ def add_colab_badge(path: Path, user: str, repo: str) -> None:
     nbformat.write(nb, path)
 
 
-def build(stem: str, execute: bool, user: str, repo: str) -> bool:
+def build(stem: str, execute: bool, user: str, repo: str, branch: str) -> bool:
     src = EXAMPLES / f"{stem}.py"
     out = EXAMPLES / f"{stem}.ipynb"
     if not src.exists():
@@ -136,7 +136,7 @@ def build(stem: str, execute: bool, user: str, repo: str) -> bool:
             return False
         strip_progress_bars(out)
 
-    add_colab_badge(out, user, repo)
+    add_colab_badge(out, user, repo, branch)
     print(f"     {out.stat().st_size/1e6:.1f} MB")
     return True
 
@@ -147,6 +147,8 @@ def main() -> int:
     ap.add_argument("--no-execute", action="store_true")
     ap.add_argument("--user", default="sgpfaff")
     ap.add_argument("--repo", default="tambora-docs")
+    # Must match the branch the docs actually live on, or the badge 404s in Colab.
+    ap.add_argument("--branch", default="master")
     a = ap.parse_args()
 
     stems = a.stems or sorted(p.stem for p in EXAMPLES.glob("*.py"))
@@ -155,7 +157,7 @@ def main() -> int:
         return 1
 
     print(f"building {len(stems)} notebook(s)")
-    failed = [s for s in stems if not build(s, not a.no_execute, a.user, a.repo)]
+    failed = [s for s in stems if not build(s, not a.no_execute, a.user, a.repo, a.branch)]
     if failed:
         print(f"\nFAILED: {', '.join(failed)}")
         return 1
