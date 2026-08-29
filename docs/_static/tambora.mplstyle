@@ -1,0 +1,48 @@
+# Shared matplotlib style for every figure in the tambora docs.
+# Use it with:  plt.style.use("https://<docs-url>/_static/tambora.mplstyle")
+# or, in the notebooks, from the local copy:  plt.style.use("../_static/tambora.mplstyle")
+
+figure.dpi         : 130
+savefig.dpi        : 130
+savefig.bbox       : tight
+figure.facecolor   : white
+savefig.facecolor  : white
+
+font.family        : serif
+font.serif         : STIX Two Text, STIXGeneral, DejaVu Serif
+mathtext.fontset   : stix
+font.size          : 9
+axes.titlesize     : 10
+axes.labelsize     : 9
+legend.fontsize    : 8.5
+
+# No grid.
+axes.grid          : False
+
+# Inward-facing ticks on all four sides.
+xtick.direction    : in
+ytick.direction    : in
+xtick.top          : True
+ytick.right        : True
+xtick.minor.visible: True
+ytick.minor.visible: True
+xtick.major.size   : 5
+ytick.major.size   : 5
+xtick.minor.size   : 2.8
+ytick.minor.size   : 2.8
+xtick.major.width  : 0.8
+ytick.major.width  : 0.8
+
+axes.linewidth     : 0.9
+axes.spines.top    : True
+axes.spines.right  : True
+
+# Black-first: default line and scatter colour.
+axes.prop_cycle    : cycler('color', ['000000', 'd94801', '2166ac', '35978f', '762a83'])
+lines.linewidth    : 1.3
+scatter.marker     : o
+
+# inferno for anything continuous.
+image.cmap         : inferno
+
+legend.frameon     : False

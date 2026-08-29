@@ -1,0 +1,17 @@
+# Pinned so a docs build is reproducible. Bump `tambora` when documenting a new release.
+tambora==0.1.0a1
+galpy>=1.12
+numpy
+scipy
+matplotlib
+astropy
+tqdm
+
+# Sphinx toolchain
+sphinx>=8.0
+furo
+myst-nb>=1.1
+sphinx-copybutton
+sphinx-design
+ipykernel
+jupytext
