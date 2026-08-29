@@ -115,6 +115,8 @@ nb_execution_excludepatterns = [
     "examples/07-stream-gaps.ipynb",
     "examples/08-ring-galaxy.ipynb",
     "examples/09-disk-instability.ipynb",
+    "examples/10-spiral-arms.ipynb",
+    "examples/11-disk-merger.ipynb",
 ]
 
 # The .py sources next to each notebook are jupytext mirrors, not pages.

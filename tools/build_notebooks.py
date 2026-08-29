@@ -37,6 +37,8 @@ EXECUTE = {
     "07-stream-gaps",
     "08-ring-galaxy",
     "09-disk-instability",
+    "10-spiral-arms",
+    "11-disk-merger",
 }
 
 #: Cell timeout for the executed notebooks, in seconds.

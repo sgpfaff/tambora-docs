@@ -132,6 +132,34 @@ strength $A_2$, the Ostriker–Peebles criterion, and pattern speed. **~5 min**
 
 ::::
 
+## Interacting galaxies
+
+What one galaxy does to another. All three build their disks by hand, and each
+turns on a comparison rather than a single run — a control, a mirrored spin, or
+a second galaxy.
+
+::::{grid} 1 2 2 2
+:gutter: 3
+
+:::{grid-item-card} 10 · Spiral arms from a flyby
+:link: 10-spiral-arms
+:link-type: doc
+
+Why a prograde satellite drives grand-design arms and a retrograde one barely
+does anything. Includes the control run that makes the claim mean something.
+**~4 min**
+:::
+
+:::{grid-item-card} 11 · Disk–disk merger
+:link: 11-disk-merger
+:link-type: doc
+
+Tidal bridge and tails from a close prograde encounter. Four live components,
+and why a rigid external halo cannot work here. **~5 min**
+:::
+
+::::
+
 ## Running them yourself
 
 **In Colab** — click the badge at the top of any notebook. The first cell
@@ -178,5 +206,20 @@ python tools/build_notebooks.py
 
 08-ring-galaxy
 09-disk-instability
+```
+
+```{toctree}
+:hidden:
+:caption: Interacting galaxies
+
+10-spiral-arms
+11-disk-merger
+```
+
+```{toctree}
+:hidden:
+:caption: Going bigger
+
+scripts
 ```
 
