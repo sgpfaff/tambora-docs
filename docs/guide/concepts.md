@@ -191,6 +191,50 @@ sim.gc.r(t=3.0)                                 # 3. accessors, in kpc
 
 That is the complete mental model. Everything else is detail.
 
+## Seeing all four at once
+
+You do not have to hold this in your head. Evaluate the `Sim` and it shows you
+exactly what it is holding — the components, the forces, and the hooks:
+
+```text
+Sim — run: 301 snapshots, t = 0 -> 3 Gyr
+  5000 particles in 1 component, 3.00e+04 Msun total
+
+  Components
+  ┌─────────┬───────────┬─────────────┐
+  │ name    │ particles │ mass [Msun] │
+  ├─────────┼───────────┼─────────────┤
+  │ gc      │      5000 │    3.00e+04 │
+  └─────────┴───────────┴─────────────┘
+
+  External forces
+  ┌────────────────────────────────────────────┐
+  │ force                                      │
+  ├────────────────────────────────────────────┤
+  │ ExternalGalpyPotential(CompositePotential) │
+  └────────────────────────────────────────────┘
+
+  Hooks
+  ┌─────────────────────┬─────────────┐
+  │ hook                │ cadence     │
+  ├─────────────────────┼─────────────┤
+  │ BoundednessHook     │ EveryOutput │
+  │ ConservationMonitor │ EveryOutput │
+  └─────────────────────┴─────────────┘
+```
+
+The header line tells you whether it has run and, if so, how many snapshots it
+holds and over what time range. Note the `ConservationMonitor` in the hook
+table: you never added it — `run()` attaches one by default — and this is where
+you would notice that.
+
+`Component` has a compact repr too, which is what you see when you inspect
+`sim.components`:
+
+```text
+Component('gc', 5000 particles, 3.00e+04 Msun)
+```
+
 ## Next
 
 - [Units](units.md) — the one place the abstraction is deliberately leaky.

@@ -71,7 +71,17 @@ print(f"half-mass radius {np.median(np.linalg.norm(pos, axis=1)) * 1000:.0f} pc"
 # %%
 sim = Sim()
 sim.add_particles("cluster", pos, vel, mass)
-print(sim.components)
+
+# %% [markdown]
+# ### Look at what you built
+#
+# Evaluate the `Sim` itself and it prints an overview of everything it holds:
+# components with their particle counts and masses, any external forces, and any
+# registered hooks. It is the quickest way to confirm a setup is what you meant,
+# and worth a glance before every `run()`.
+
+# %%
+sim
 
 # %% [markdown]
 # ## 3. Run
@@ -204,7 +214,8 @@ plt.show()
 # %% [markdown]
 # ## What you now know
 #
-# - A `Sim` holds particles, forces and (after `run()`) every snapshot.
+# - A `Sim` holds particles, forces and (after `run()`) every snapshot, and
+#   evaluating it prints an overview of all three.
 # - Components are **named**, and the name becomes an attribute: `sim.cluster`.
 # - Accessors take `t` and return **physical units** — kpc, km/s, M☉.
 # - `sim.monitor.drift["energy"]` is your first check on any result.

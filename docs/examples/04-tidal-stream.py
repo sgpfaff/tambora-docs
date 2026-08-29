@@ -179,7 +179,13 @@ bh = BoundednessHook(
 )
 sim.add_hook(bh)
 
-print(sim.components)
+# %% [markdown]
+# Evaluating the `Sim` shows the whole configuration at a glance -- the
+# component, the external potential, and the hooks that will fire during the
+# run:
+
+# %%
+sim
 
 # %% [markdown]
 # ## 4. Run

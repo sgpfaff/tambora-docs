@@ -103,6 +103,16 @@ def build(stem: str, execute: bool, user: str, repo: str) -> bool:
         return False
 
     print(f"  -> {stem}")
+    # A percent-format file must be valid Python: markdown lines that lose their
+    # leading "# " parse as code and fail confusingly deep in the kernel.
+    import ast
+    try:
+        ast.parse(src.read_text())
+    except SyntaxError as exc:
+        print(f"  !! {stem}.py is not valid Python (line {exc.lineno}): {exc.msg}")
+        print(f"     {(exc.text or '').strip()[:90]}")
+        return False
+
     subprocess.run(
         [sys.executable, "-m", "jupytext", "--to", "notebook", "-o", str(out), str(src)],
         check=True,

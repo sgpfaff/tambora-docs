@@ -5,6 +5,31 @@ most of its error messages name the offending argument and the valid range. This
 page collects the ones you are most likely to meet, and the small number of
 failures that are *silent* and therefore worth knowing in advance.
 
+## First: look at the `Sim`
+
+Before debugging anything else, evaluate the simulation object. `sim` in a
+notebook, `print(sim)` in a script:
+
+```text
+Sim — not run
+  1200 particles in 2 components, 1.10e+07 Msun total
+
+  Components
+  ┌─────────┬───────────┬─────────────┐
+  │ name    │ particles │ mass [Msun] │
+  ├─────────┼───────────┼─────────────┤
+  │ cluster │       800 │    1.00e+06 │
+  │ host    │       400 │    1.00e+07 │
+  └─────────┴───────────┴─────────────┘
+  ...
+```
+
+A surprising number of problems are visible here immediately: a component you
+thought you added and did not, a mass that is off by a factor of a thousand, a
+particle count that says your sampler returned fewer particles than you asked
+for, an external force missing entirely, or a hook that never registered. It
+also tells you whether the simulation has run and how many snapshots it holds.
+
 ## Installation
 
 **`No matching distribution found for tambora`**

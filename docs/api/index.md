@@ -33,6 +33,13 @@ explains *why* each of these exists. This page is the lookup table.
 is the view you get back from `sim.<name>` for one named particle set — it
 carries the same accessors, restricted to that component's particles.
 
+:::{tip}
+Both have a useful `__repr__`. Evaluating a `Sim` prints its run state,
+components, external forces and registered hooks as a table — the fastest way to
+check a setup is what you intended. See
+[Core concepts](../guide/concepts.md#seeing-all-four-at-once).
+:::
+
 ## Initial conditions and galpy interoperability
 
 ```{eval-rst}

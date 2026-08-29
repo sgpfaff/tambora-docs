@@ -93,16 +93,15 @@ RO, VO = 8.0, 220.0
 # length. In this notebook the King progenitor gives a gap depth of ~0.2 where the
 # Plummer one gave ~0.5.
 #
-**Plenty of particles.** A deficit cannot be seen in a sparse histogram.
-
-**A long stream.** This one matters more than it looks. A subhalo massive enough
-to open a visible gap is also massive enough to kick the *progenitor* if it
-passes nearby — and once the remnant moves, the whole stream shifts with it and
-the comparison against the control is measuring translation rather than
-structure. On a 2.7 kpc stream there is nowhere far enough to aim. So we evolve
-for 1.8 Gyr first, giving an 18 kpc stream, and put the impact 7 kpc down one
-tail. The progenitor then barely notices: it shifts 0.2 kpc, against a gap
-signal of 9σ.
+# **Plenty of particles.** A deficit cannot be seen in a sparse histogram.
+#
+# **A long stream.** This one matters more than it looks. A subhalo massive
+# enough to open a visible gap is also massive enough to kick the *progenitor*
+# if it passes nearby — and once the remnant moves, the whole stream shifts with
+# it, so the comparison against the control measures translation rather than
+# structure. On a 2.7 kpc stream there is nowhere far enough to aim. So we evolve
+# for 1.8 Gyr first, giving an 18 kpc stream, and put the impact 7 kpc down one
+# tail. The progenitor then barely notices.
 
 # %%
 o = Orbit(
@@ -208,27 +207,101 @@ R_S = 0.35  # Plummer scale radius [kpc]
 EPS_SUB = 2 * R_S  # <- the factor of two
 B_IMP = 0.35  # impact parameter [kpc]
 
-T_CA = 0.005  # time to closest approach [Gyr]
-T_POST = 0.5  # how long to follow the stream afterwards
+D_RUNUP = 8.0  # how far out to launch the perturber [kpc]
+T_POST = 0.5  # how long to follow the stream after the encounter [Gyr]
 DT = 2e-4
 
-def launch(v_sub, t_ca=T_CA):
-    """Position and velocity for a perturber reaching closest approach at t_ca."""
-    d0 = v_sub * KMS_TO_KPCGYR * t_ca
-    x_ca = target + v_local * KMS_TO_KPCGYR * t_ca  # where the target will be
-    x0 = x_ca + b_hat * B_IMP  # perturber's closest-approach point
-    return x0 - n_hat * d0, n_hat * v_sub, x0, x_ca
+# %% [markdown]
+# ### Aiming it properly
+#
+# The obvious way to set up the encounter is to extrapolate the target in a
+# straight line, `x = target + v * t`, and fire the perturber at that point.
+# That works only for a very short run-up, and it fails in two ways at once:
+#
+# 1. **The target does not travel in a straight line.** Over 12 Myr the linear
+#    prediction is already 0.68 kpc off — twice the impact parameter we are
+#    trying to set.
+# 2. **Neither does the perturber.** Launched 3.7 kpc out and flown straight, it
+#    falls 0.86 kpc toward the Galaxy before it arrives.
+#
+# Either error alone means the encounter does not have the impact parameter you
+# think it does, which quietly invalidates the comparison with theory.
+#
+# The fix is to let the host potential do the work in both directions: integrate
+# the **target forward** to find where it will actually be, and integrate the
+# **perturber backward** from the encounter you want to find where to launch it.
+# With that, the run-up can be as long as you like and the geometry is still
+# exact — measured below to better than 1%.
+
+# %%
+def propagate(pos, vel, t, n=400):
+    """True state after time `t` in the host potential. `t` may be negative.
+
+    pos [kpc], vel [km/s] -> (pos, vel) at t, same units.
+    """
+    R = np.hypot(pos[0], pos[1])
+    o = Orbit(
+        [
+            R * u.kpc,
+            ((pos[0] * vel[0] + pos[1] * vel[1]) / R) * u.km / u.s,
+            ((pos[0] * vel[1] - pos[1] * vel[0]) / R) * u.km / u.s,
+            pos[2] * u.kpc,
+            vel[2] * u.km / u.s,
+            np.arctan2(pos[1], pos[0]) * u.rad,
+        ],
+        ro=RO,
+        vo=VO,
+    )
+    o.turn_physical_on()
+    ts = np.linspace(0, t, n) * u.Gyr
+    o.integrate(ts, MWPotential2014)
+    end = ts[-1]
+    return (np.array([o.x(end), o.y(end), o.z(end)]),
+            np.array([o.vx(end), o.vy(end), o.vz(end)]))
+
+
+def launch(v_sub, d_runup=D_RUNUP):
+    """Everything describing the encounter, as a dict.
+
+    Keys: ``pos``/``vel`` (where to release the perturber), ``t_ca`` (time until
+    closest approach), ``x_ca`` (where the target will be then), ``x0`` (the
+    perturber's closest-approach point) and ``w`` (its velocity there).
+
+    The run-up *distance* is held fixed rather than the time, so a faster
+    perturber simply starts earlier and every encounter is resolved with the
+    same number of steps.
+    """
+    t_ca = d_runup / (v_sub * KMS_TO_KPCGYR)
+
+    # 1. where the target will actually be, on its real orbit
+    x_ca, v_ca = propagate(target, v_local, t_ca)
+
+    # 2. encounter frame from the stream direction at that moment
+    u_l = v_ca / np.linalg.norm(v_ca)
+    n_h = np.cross(u_l, [0.0, 0.0, 1.0])
+    n_h /= np.linalg.norm(n_h)
+    b_h = np.cross(n_h, u_l)
+    b_h /= np.linalg.norm(b_h)
+
+    # 3. the encounter we want: perturber at x0, moving at v_sub across the stream
+    x0 = x_ca + b_h * B_IMP
+    w = n_h * v_sub
+
+    # 4. back-integrate that state to find the launch point
+    p_launch, v_launch = propagate(x0, w, -t_ca)
+    return {"pos": p_launch, "vel": v_launch, "t_ca": t_ca,
+            "x_ca": x_ca, "x0": x0, "w": w}
 
 
 def run_pair(v_sub, t_end, dt, dt_out):
     """Identical runs with and without the perturber."""
+    L = launch(v_sub)
     out = []
     for with_sub in (False, True):
         s = Sim()
         s.add_particles("stream", P0, V0, M0)
         if with_sub:
-            p_sub, v_sub_vec, _, _ = launch(v_sub)
-            s.add_particles("sub", p_sub[None, :], v_sub_vec[None, :],
+            s.add_particles("sub", L["pos"][None, :], L["vel"][None, :],
                             np.array([M_SUB]))
         s.add_external_pot(MWPotential2014)
         s.run(
@@ -241,6 +314,13 @@ def run_pair(v_sub, t_end, dt, dt_out):
     return out
 
 
+V_SUB = 300.0
+_L = launch(V_SUB)
+print(f"run-up            {np.linalg.norm(_L['pos'] - _L['x_ca']):.2f} kpc "
+      f"({np.linalg.norm(_L['pos'] - _L['x_ca']) / EPS_SUB:.0f}x the perturber's "
+      f"own softening)")
+print(f"time to encounter {_L['t_ca'] * 1000:.1f} Myr")
+
 # %% [markdown]
 # ## 4. Measure the kick
 #
@@ -252,7 +332,9 @@ def run_pair(v_sub, t_end, dt, dt_out):
 V_SUB = 300.0
 
 t0 = time.time()
-ctrl_s, imp_s = run_pair(V_SUB, t_end=0.02, dt=2e-5, dt_out=0.005)
+L = launch(V_SUB)
+T_CA = L["t_ca"]
+ctrl_s, imp_s = run_pair(V_SUB, t_end=2 * T_CA, dt=T_CA / 400, dt_out=T_CA)
 print(f"{time.time() - t0:.0f} s")
 
 dv_measured = (imp_s.stream.vel(t=-1) - ctrl_s.stream.vel(t=-1))[unbound]
@@ -275,8 +357,8 @@ print(f"median |dv| = {np.median(mag_measured):.3f} km/s, max = {mag_measured.ma
 
 # %%
 p_ca = ctrl_s.stream.pos(t=1)[unbound]  # control state at closest approach
-v_ca = ctrl_s.stream.vel(t=1)[unbound]
-_, sub_vel_vec, x0, x_ca = launch(V_SUB)
+v_ca = ctrl_s.stream.vel(t=1)[unbound]  # snapshot 1 is exactly t = T_CA
+sub_vel_vec, x0, x_ca = L["w"], L["x0"], L["x_ca"]
 
 GM = M_SUB / mass_in_msol(VO, RO)  # galpy natural units
 j_near = np.argmin(np.linalg.norm(p_ca - x_ca, axis=1))
@@ -360,17 +442,19 @@ rows = []
 
 t0 = time.time()
 for v_sub in speeds:
-    c_s, i_s = run_pair(v_sub, t_end=0.008, dt=2e-5, dt_out=0.002)
+    Lv = launch(v_sub)
+    t_ca_v, x_ca_v = Lv["t_ca"], Lv["x_ca"]
+    c_s, i_s = run_pair(v_sub, t_end=2 * t_ca_v, dt=t_ca_v / 400, dt_out=t_ca_v)
     dvm = np.linalg.norm(
         (i_s.stream.vel(t=-1) - c_s.stream.vel(t=-1))[unbound], axis=1
     )
     p_c = c_s.stream.pos(t=1)[unbound]
     v_c = c_s.stream.vel(t=1)[unbound]
-    _, sv, x0_v, xca_v = launch(v_sub, t_ca=0.002)
-    jn = np.argmin(np.linalg.norm(p_c - xca_v, axis=1))
+
+    jn = np.argmin(np.linalg.norm(p_c - x_ca_v, axis=1))
     dva = np.linalg.norm(
         impulse_deltav_plummer_curvedstream(
-            v_c / VO, p_c / RO, B_IMP / RO, sv / VO, x0_v / RO,
+            v_c / VO, p_c / RO, B_IMP / RO, Lv["w"] / VO, Lv["x0"] / RO,
             v_c[jn] / VO, GM, R_S / RO,
         ) * VO,
         axis=1,
@@ -426,7 +510,7 @@ plt.show()
 
 # %%
 t0 = time.time()
-ctrl_l, imp_l = run_pair(V_SUB, t_end=T_POST, dt=DT, dt_out=0.05)
+ctrl_l, imp_l = run_pair(V_SUB, t_end=T_POST, dt=DT, dt_out=0.01)
 print(f"{time.time() - t0:.0f} s")
 
 Pc, Vc = ctrl_l.stream.pos(t=-1), ctrl_l.stream.vel(t=-1)
@@ -454,17 +538,28 @@ s_i = (Pi[unbound] - origin_i) @ u_f
 bins = np.linspace(np.percentile(s_c, 1), np.percentile(s_c, 99), 50)
 bin_w = bins[1] - bins[0]
 
-print(f"progenitor displaced by {prog_shift:.3f} kpc "
+v_orb = np.linalg.norm(Vc[bound].mean(0))
+print(f"progenitor displaced by  {prog_shift:.3f} kpc "
       f"({prog_shift / bin_w:.2f} histogram bins)")
-print(f"progenitor velocity kick {prog_vkick:.2f} km/s")
-print("-> negligible; the two streams are measured on the same footing"
-      if prog_shift < 0.5 * bin_w else
-      "-> NOT negligible; aim the perturber further from the progenitor")
+print(f"progenitor velocity kick {prog_vkick:.2f} km/s "
+      f"({100 * prog_vkick / v_orb:.1f}% of its {v_orb:.0f} km/s orbital speed)")
+print("-> the remnant's orbit is essentially unchanged"
+      if prog_vkick < 0.05 * v_orb else
+      "-> the remnant's orbit changed materially; aim further down the tail")
 
 # %% [markdown]
-# Measuring each stream from **its own** progenitor removes whatever residual
-# translation is left. That is why `origin_c` and `origin_i` are computed
-# separately above rather than sharing one origin.
+# Two separate concerns are being checked here, and it is worth keeping them
+# apart:
+#
+# 1. **Translation** — if the remnant moves, the whole stream moves with it.
+#    This is fully removed by measuring each stream from *its own* progenitor,
+#    which is why `origin_c` and `origin_i` are computed separately rather than
+#    sharing one origin. Skip that step and a 0.2 kpc shift — half a bin — shows
+#    up as a convincing but entirely spurious "gap".
+# 2. **Orbit change** — if the kick is a large fraction of the orbital speed,
+#    the two streams are genuinely on different orbits and no choice of origin
+#    saves the comparison. That is what the percentage above is testing, and a
+#    couple of per cent is fine.
 
 # %% [markdown]
 # ### Density, and its significance
@@ -656,14 +751,14 @@ def update(k):
 
 
 anim = FuncAnimation(fig, update, frames=range(len(times)), blit=False)
-anim.save("stream_gap.gif", writer=PillowWriter(fps=6), dpi=80)
+anim.save("stream_gap.gif", writer=PillowWriter(fps=5), dpi=80)
 plt.close(fig)
 
 _src = PILImage.open("stream_gap.gif")
 _fr = [f.copy().convert("RGB").quantize(colors=96, method=PILImage.MEDIANCUT)
        for f in ImageSequence.Iterator(_src)]
 _fr[0].save("stream_gap.gif", save_all=True, append_images=_fr[1:],
-            duration=166, loop=0, optimize=True)
+            duration=200, loop=0, optimize=True)
 print(f"{len(_fr)} frames, "
       f"{__import__('os').path.getsize('stream_gap.gif') / 1e6:.1f} MB")
 

@@ -28,6 +28,34 @@ sim.add_particles("cluster", pos, vel, mass)
 The string `"cluster"` is the important part. It is the name you will use to ask
 questions about this set of particles for the rest of the session.
 
+### Check what you built
+
+Evaluate the `Sim` itself — in a notebook just type `sim`, or `print(sim)` in a
+script — and it prints an overview of everything it is holding:
+
+```text
+Sim — not run
+  2000 particles in 1 component, 1.00e+06 Msun total
+
+  Components
+  ┌─────────┬───────────┬─────────────┐
+  │ name    │ particles │ mass [Msun] │
+  ├─────────┼───────────┼─────────────┤
+  │ cluster │      2000 │    1.00e+06 │
+  └─────────┴───────────┴─────────────┘
+
+  External forces
+    (none)
+
+  Hooks
+    (none)
+```
+
+This is the fastest way to confirm a setup is what you meant: the right
+components with the right particle counts and masses, the forces you think you
+added, and the hooks you think you registered. Get into the habit of glancing at
+it before every `run()`.
+
 ## 2. Run it
 
 ```python
