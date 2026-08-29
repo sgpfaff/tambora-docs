@@ -106,13 +106,31 @@ tracks how $\beta(r)$ evolves as a progenitor is stripped using a custom hook.
 
 ## Galaxies
 
-:::{admonition} In progress
-:class: seealso
+Disk galaxies, and what happens when you hit one or leave it alone. Neither of
+these uses a built-in sampler — every IC helper that ships with tambora is
+spherical, so both notebooks build an exponential disk by hand. Read 08 first if
+you have not made a disk before; 09 reuses the same construction.
 
-Two galaxy-scale examples are being written: **ring galaxy formation** from a
-head-on collision, and **disk instability**, showing a bare disk going
-bar-unstable and a dark-matter halo stabilising it.
+::::{grid} 1 2 2 2
+:gutter: 3
+
+:::{grid-item-card} 08 · Ring galaxy formation
+:link: 08-ring-galaxy
+:link-type: doc
+
+A companion punched straight through a disk. Building a disk from scratch, and
+why the ring is a kinematic caustic rather than swept-up matter. **~1 min**
 :::
+
+:::{grid-item-card} 09 · Disk instability
+:link: 09-disk-instability
+:link-type: doc
+
+A bare disk goes bar-unstable; the same disk inside a halo does not. Bar
+strength $A_2$, the Ostriker–Peebles criterion, and pattern speed. **~5 min**
+:::
+
+::::
 
 ## Running them yourself
 
@@ -152,5 +170,13 @@ python tools/build_notebooks.py
 05-tidal-stripping
 06-stream-track
 07-stream-gaps
+```
+
+```{toctree}
+:hidden:
+:caption: Galaxies
+
+08-ring-galaxy
+09-disk-instability
 ```
 

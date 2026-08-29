@@ -35,6 +35,8 @@ EXECUTE = {
     "05-tidal-stripping",
     "06-stream-track",
     "07-stream-gaps",
+    "08-ring-galaxy",
+    "09-disk-instability",
 }
 
 #: Cell timeout for the executed notebooks, in seconds.
