@@ -231,10 +231,11 @@ def make_density_hook(components, extent, bins, every_n_steps=None, tracers=()):
             for name in self.tracers:
                 s = state.component(name)
                 m = s.mass
+                # Median, not mean: stripped debris drags a mass-weighted
+                # centre far off the surviving core.
                 self.com[name].append(
-                    [float(np.average(s.x(), weights=m)),
-                     float(np.average(s.y(), weights=m)),
-                     float(np.average(s.z(), weights=m))]
+                    [float(np.median(s.x())), float(np.median(s.y())),
+                     float(np.median(s.z()))]
                 )
 
         def as_arrays(self):
@@ -450,15 +451,47 @@ FG = "#dddddd"
 TRACER = "#4dd0e1"  # cyan reads clearly against magma at every density
 
 
+def _tracer_xy(d, meta, name, i, proj="xy"):
+    """Where to draw the marker for one tracer, in plot coordinates.
+
+    Prefer the *densest point* of that component's own map over its centre of
+    mass. Once a satellite starts shedding material the two part company badly:
+    a fifth of the mass spread over tens of kpc drags the mass-weighted mean
+    well off the surviving core, so a COM marker ends up floating in empty space
+    beside the thing it is supposed to be pointing at. The density peak tracks
+    the core, which is what a reader is looking at.
+    """
+    key = f"{proj}_{name}"
+    if key in d:
+        m = d[key][i]
+        # Only mark it if it is actually in frame. A satellite that starts
+        # outside the plotted extent contributes nothing but noise, and argmax
+        # will happily point at a single stray pixel.
+        stack = d[key]
+        in_frame = m.sum()
+        best = max(float(stack[j].sum()) for j in range(len(stack)))
+        if best > 0 and in_frame < 0.25 * best:
+            return None
+        if m.max() > 0:
+            ext, bins = meta["extent"], meta["bins"]
+            ctr = np.linspace(-ext, ext, bins + 1)
+            ctr = 0.5 * (ctr[1:] + ctr[:-1])
+            ia, ib = np.unravel_index(int(np.argmax(m)), m.shape)
+            return ctr[ia], ctr[ib]
+    com = d.get(f"com_{name}")
+    if com is None:
+        return None
+    c = com[i]
+    return (c[0], c[1]) if proj == "xy" else (c[0], c[2])
+
+
 def _tracers(ax, d, meta, i, proj="xy"):
-    """Draw each tracer's centre of mass as an open marker."""
+    """Draw an open marker on each tracer."""
     for name in meta.get("tracers", []):
-        key = f"com_{name}"
-        if key not in d:
+        xy = _tracer_xy(d, meta, name, i, proj)
+        if xy is None:
             continue
-        c = d[key][i]
-        a, b = (c[0], c[1]) if proj == "xy" else (c[0], c[2])
-        ax.plot(a, b, "o", mfc="none", mec=TRACER, ms=9, mew=1.6, zorder=5)
+        ax.plot(xy[0], xy[1], "o", mfc="none", mec=TRACER, ms=9, mew=1.6, zorder=5)
 
 
 def _dark(ax):
@@ -550,7 +583,8 @@ def animate(npz, out=None, fps=12, edge_on=True):
         axes[1].set_aspect("equal")
         _dark(axes[1])
 
-    names = [n for n in meta.get("tracers", []) if f"com_{n}" in d]
+    names = [n for n in meta.get("tracers", [])
+             if f"com_{n}" in d or f"xy_{n}" in d]
     mk0 = [axes[0].plot([], [], "o", mfc="none", mec=TRACER, ms=10, mew=1.8,
                         zorder=5)[0] for _ in names]
     mk1 = ([axes[1].plot([], [], "o", mfc="none", mec=TRACER, ms=10, mew=1.8,
@@ -564,10 +598,13 @@ def animate(npz, out=None, fps=12, edge_on=True):
         if im1 is not None:
             im1.set_data(_smooth(_stack(d, meta, i, "xz") / cell))
         for k, n in enumerate(names):
-            c = d[f"com_{n}"][i]
-            mk0[k].set_data([c[0]], [c[1]])
+            a = _tracer_xy(d, meta, n, i, "xy")
+            if a is not None:
+                mk0[k].set_data([a[0]], [a[1]])
             if mk1:
-                mk1[k].set_data([c[0]], [c[2]])
+                b = _tracer_xy(d, meta, n, i, "xz")
+                if b is not None:
+                    mk1[k].set_data([b[0]], [b[1]])
         ttl.set_text(f"{case} — $t = {t[i]:.2f}$ Gyr")
         return (im0, ttl, *mk0, *mk1) if im1 is None else (im0, im1, ttl, *mk0, *mk1)
 
