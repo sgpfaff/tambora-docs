@@ -64,8 +64,8 @@ and the rest of the API explains itself.
 :link: examples/index
 :link-type: doc
 
-Runnable notebooks, from a first Plummer sphere to tidal streams in a
-triaxial halo. Every one opens in Colab.
+Runnable notebooks, from a first Plummer sphere to subhalo impacts on
+tidal streams. Every one opens in Colab.
 :::
 
 :::{grid-item-card} {octicon}`list-unordered` API reference
@@ -81,6 +81,13 @@ source.
 :link-type: doc
 
 The errors you are most likely to hit, and what they actually mean.
+:::
+
+:::{grid-item-card} {octicon}`law` Licence & citing
+:link: about
+:link-type: doc
+
+How to cite tambora, the BSD licence, and the work it builds on.
 :::
 
 ::::
@@ -162,4 +169,5 @@ examples/index
 
 api/index
 guide/troubleshooting
+about
 ```
